@@ -1,0 +1,249 @@
+;====================================================================================
+;
+;					ARKANOID 83+
+;Started: 	September 20th 2002
+;By:		Patrick Armstrong
+;
+;
+;====================================================================================
+;
+;	Registers used:
+;			a - Bitch register
+;			b - X value for Ipoint (drawing)
+;			c - Y value for Ipoint (drawing)
+;			d - White (0) or black (1) pixel for Ipoint (drawing)
+;			e - Unused
+;			f - Unused
+;			g - Unused
+;			h - Unused
+;			i - Unused
+;
+.NOLIST
+#define     equ             .equ
+#define     EQU             .equ
+#define     END             .end
+#include 	"t83pASM.inc"				;General TI-83 Plus include file
+#include	"mirages.inc"			;MirageOS include file
+				
+#DEFINE ballx saferam1
+#define bally saferam1+1
+#define balld saferam1+2
+#define paddx saferam1+3
+#define paddy saferam1+4
+
+#define matrixloopx saferam1+5
+#define matrixloopy saferam1+6
+#define matrixyval saferam1+7
+#define Exitcounter saferam1+8
+#define blockb matrixloopx	;since this is only used in init, it' can be re-used
+#define blockc matrixloopy	;ditto
+ 
+;_______________________________________________
+;			Row 1
+;¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+#define Blocks10 saferam1+10
+#define Blocks11 saferam1+11
+#define Blocks12 saferam1+12
+#define Blocks13 saferam1+13
+#define Blocks14 saferam1+14
+#define Blocks15 saferam1+15
+#define Blocks16 saferam1+16
+#define Blocks17 saferam1+17
+#define Blocks18 saferam1+18
+#define Blocks19 saferam1+19
+;_______________________________________________
+;			Row 2
+;¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+#define Blocks20 saferam1+20
+#define Blocks21 saferam1+21
+#define Blocks22 saferam1+22
+#define Blocks23 saferam1+23
+#define Blocks24 saferam1+24
+#define Blocks25 saferam1+25
+#define Blocks26 saferam1+26
+#define Blocks27 saferam1+27
+#define Blocks28 saferam1+28
+#define Blocks29 saferam1+29
+;_______________________________________________
+;			Row 3
+;¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+#define Blocks30 saferam1+30
+#define Blocks31 saferam1+31
+#define Blocks32 saferam1+32
+#define Blocks33 saferam1+33
+#define Blocks34 saferam1+34
+#define Blocks35 saferam1+35
+#define Blocks36 saferam1+36
+#define Blocks37 saferam1+37
+#define Blocks38 saferam1+38
+#define Blocks39 saferam1+39
+;_______________________________________________
+;			Row 4
+;¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+#define Blocks40 saferam1+40
+#define Blocks41 saferam1+41
+#define Blocks42 saferam1+42
+#define Blocks43 saferam1+43
+#define Blocks44 saferam1+44
+#define Blocks45 saferam1+45
+#define Blocks46 saferam1+46
+#define Blocks47 saferam1+47
+#define Blocks48 saferam1+48
+#define Blocks49 saferam1+49
+;_______________________________________________
+;			Row 5
+;¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+#define Blocks50 saferam1+50
+#define Blocks51 saferam1+51
+#define Blocks52 saferam1+52
+#define Blocks53 saferam1+53
+#define Blocks54 saferam1+54
+#define Blocks55 saferam1+55
+#define Blocks56 saferam1+56
+#define Blocks57 saferam1+57
+#define Blocks58 saferam1+58
+#define Blocks59 saferam1+59
+
+
+;balld:
+; 1=down/left
+; 2=down/right
+; 3=up/left
+; 4=up/right
+
+.LIST
+
+	.org	$9d93				;Origin (set back two to account for AsmPrgm)
+	.db	$BB,$6D				;Compiled AsmPrgm token
+	ret					;So TIOS wont run the program
+	.db	1				;Identifier as MirageOS program
+	.db	11111111b,11111111b
+	.db	11100000b,00001111b
+	.db	11010000b,00111111b
+	.db	11110011b,11111111b
+	.db	00101110b,00111111b
+	.db	11111111b,11111011b
+	.db	11001100b,00000011b
+	.db	11010100b,11000011b
+	.db	11100001b,10000011b
+	.db	11111111b,10000111b
+	.db	11001110b,00001111b
+	.db	11010001b,00111011b
+	.db	11110001b,01111111b
+	.db	11111110b,01111111b
+	.db	11111111b,11111111b
+	.db	"What are you doing Zorak?",0
+	
+	;initial values/setup
+	bcall(_clrlcdfull)			;clear screen
+	SET fullScrnDraw, (IY + apiFlg4)	;allow write to col 95 row 0
+	SET bufferOnly,(IY + plotflag3)
+	bcall(_RunIndicOff)			;Turns off the Run Indicator
+	RES indiconly, (IY+indicflags)		;make sure keys are scanned
+	bcall(_GrBufClr)
+	
+	
+;random code probably gone soonish	
+;-----------------------------Ball's initial position----------------------
+;	bcall(_Random)		;set op1 to rand #
+;	ld a,96		
+;	bcall(_SetXXOp2)	;set op2 to 96
+;	bcall(_FPMult)		;get rand # betw 0/96
+;	bcall(_Int)		;set to integer
+;	bcall(_convop1)		;set e to that num
+;	ld a,e	
+;	ld (ballx),a		;initial ballx val
+;	
+;	bcall(_Random)
+;;	ld a,64
+;	bcall(_SetXXOp2)
+;	bcall(_FPMult)
+;	bcall(_Int)
+;	bcall(_convop1)
+;	ld a,e
+;	ld (bally),a
+;;	
+;;	bcall(_Random)
+;	bcall(_OP2Set3)
+;	bcall(_FPMult)
+;	bcall(_Int)
+;	bcall(_convop1)
+;	inc e
+;	ld a,e
+;	ld (balld),a
+;-----------------------------end generate initial position for ball------------------	
+;	Non random ball init pos code
+	ld a,45
+	ld (ballx),a
+	ld a,10
+	ld (bally),a
+	ld a,4	;up/right
+	ld (balld),a
+;-----------------------------Draw paddle's initial position
+	;ld a,0
+	ld h,0					;X value
+	ld l,64				;Y value (below 0 so inc *'ed below works
+	;ld d,0
+	ld h,47
+	;ld d,1					;Set D to 1.
+Initdraw:	
+	dec l					;*
+	call pixelonhl				;\
+	inc h					; \   
+	call pixelonhl				;  \  
+	inc h					;   \ 
+	call pixelonhl				;    \
+	inc h					;     \
+	call pixelonhl				;      \
+	inc h					;       \ 
+	call pixelonhl				;        \___Draw Paddle
+	inc h					;        /
+	call pixelonhl				;       /
+	inc h					;      /
+	call pixelonhl				;     /
+	inc h					;    / 
+	call pixelonhl				;   /  
+	inc h					;  /   
+	call pixelonhl				; /    
+	inc h					;/     
+	call pixelonhl	
+	ld a,h
+	SUB 9					;restart for 2nd row
+	ld h,a
+	ld a,62
+	cp l					;check if we've drawn to 2nd row
+	jr nz,Initdraw
+	;dec l		 
+	ld a,0
+	ld (paddy),a
+	ld a,h
+	ld (paddx),a
+	
+;------------------------End draw initial paddle-------------------------
+;------------------------Start drawing blocks----------------------------
+#include "blocks.z80"
+
+
+
+
+
+
+;------------------------Start Main Game Loop----------------------------
+
+Mainloop:
+	call paddler
+#include "ballmov.z80"
+#include "blockdc.z80"
+	call fastcopys
+	halt
+	call paddler
+	halt                                            
+	jp Mainloop
+	call quittoshell	
+
+
+Paddler:
+#include "paddler.z80"
+	ret
+.end
+END

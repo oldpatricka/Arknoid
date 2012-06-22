@@ -1,0 +1,135 @@
+;====================================================================================
+;
+;				       ARKANOID 83+
+;				      Paddle Routine
+;Started: 	September 20th 2002
+;By:		Patrick Armstrong
+;
+;
+;====================================================================================
+;
+;	README NOW!!!!!!!!!!!!!!!!
+;
+;	remember the slowdown used to make the ball's movement 
+;	consistent!
+;	*hint*
+;	look at the getkey routine and where it goes if there's
+;	no input!
+;
+	
+	ld a,(paddx)
+	ld b,a
+	ld a,(paddy)
+	ld c,a
+GetKey:
+	ld a,0ffh	;reset keypad
+        out (1),a	;does some thingies (@_@)
+        ld a,0feh	;enables URLD
+        out (1),a	;does a few more thingies (v_v)
+        in a,(1)	;gets input from keybard
+        cp 253 		;are you key left?
+        jr z,Left
+        cp 251		;are you key right?
+        jr z,Right
+        ld a,0fdh 	;Enable group 2 (Clear)
+  	out (1),a 	;does some thingies (@_@)
+  	in a,(1)	;sucks in key
+  	cp 191	 	;are you clear?
+  	jr z,Quit 	
+        jr Slowdown
+Left:
+	ld a,0
+	cp b			;check if paddle on far left
+	jr z,Exit
+
+
+
+	ld d,0			;Set D to 0.
+	dec c
+Leftloop:
+	inc c
+	ld a,9			;stick 9 into accumulator
+	ADD a,b			;9+Xval (b) 
+	ld b,a			;stick result back in b (Xval)
+	bcall(_IPoint)
+	SUB 9			;a-9
+	ld b,a			;stick result in b(Xval)
+	ld a,1
+	cp c
+	jr nz,Leftloop
+	dec c
+	dec b
+	jr DrawpaddleL
+;
+;
+;
+;
+Right:
+	ld a,86
+	cp b			;check if paddle on far left
+	jr z,Exit
+	
+	ld d,0			;\			
+	bcall(_IPoint)		; \_______Erase left side of paddle
+	inc c			; / 
+	bcall(_IPoint)		;/
+	
+	ld a,b			;\
+	ADD a,10		; \
+	ld b,a			;  \
+	ld d,1			;   \
+	bcall(_IPoint)		;    |----Draw right side of paddle
+	dec c			;   /
+	bcall(_IPoint)		;  /
+	sub 9			; /
+	ld b,a			;/
+	jr DrawpaddleR
+;
+;
+;
+DrawpaddleL:
+	ld d,1
+	dec c
+DrawloopL:
+	inc c
+	bcall(_IPoint)
+	ld a,1
+	cp c
+	jr nz,DrawloopL
+	dec c
+	jr exit			;Repeat
+;
+;
+;
+DrawpaddleR:
+	ld d,1
+	dec c
+DrawloopR:
+	inc c
+	ld a,9			;stick 6 into accumulator
+	ADD a,b			;6+Xval (b) 
+	ld b,a			;stick result back in b (Xval)
+	bcall(_IPoint)
+	ld a,b
+	SUB 9
+	ld b,a
+	ld a,1
+	cp c
+	jr nz,DrawloopR
+	dec c
+	jr exit			;Repeat
+Quit:
+	;bcall(_clrlcdfull)
+	call quittoshell				;Return to OS.
+Slowdown:
+	halt
+
+
+
+	
+Exit:
+	ld a,b
+	ld (paddx),a
+	ld a,c
+	ld (paddy),a
+	

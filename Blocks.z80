@@ -1,0 +1,834 @@
+;====================================================================================
+;
+;					ARKANOID 83+ (Block draw routine)
+;Started: 	November 17th 2002
+;By:		Patrick Armstrong
+;
+;
+;====================================================================================
+;
+;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+;
+;	As far as I know ALL this code is working properly
+;
+;
+;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+;.NOLIST
+;#define     equ             .equ
+;#define     EQU             .equ
+;#define     END             .end
+;#include "t83pASM.inc"				;General TI-83 Plus include file
+;#include "mirages.inc"			;MirageOS include file
+;			
+;#DEFINE ballx saferam1
+;#define bally saferam1+1
+;#define balld saferam1+2
+;#define paddx saferam1+3
+;#define paddy saferam1+4
+;#define matrixloopx saferam1+5
+;#define matrixloopy saferam1+6
+;#define matrixyval saferam1+7
+;#define Exitcounter saferam1+8
+
+
+;_______________________________________________
+;			Row 1
+;¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+;#define Blocks10 saferam1+10
+;#define Blocks11 saferam1+11
+;#define Blocks12 saferam1+12
+;#define Blocks13 saferam1+13
+;#define Blocks14 saferam1+14
+;#define Blocks15 saferam1+15
+;#define Blocks16 saferam1+16
+;#define Blocks17 saferam1+17
+;#define Blocks18 saferam1+18
+;#define Blocks19 saferam1+19
+;_______________________________________________
+;			Row 2
+;¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+;#define Blocks20 saferam1+20
+;#define Blocks21 saferam1+21
+;#define Blocks22 saferam1+22
+;#define Blocks23 saferam1+23
+;#define Blocks24 saferam1+24
+;#define Blocks25 saferam1+25
+;#define Blocks26 saferam1+26
+;#define Blocks27 saferam1+27
+;#define Blocks28 saferam1+28
+;#define Blocks29 saferam1+29
+;_______________________________________________
+;			Row 3
+;¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+;#define Blocks30 saferam1+30
+;#define Blocks31 saferam1+31
+;#define Blocks32 saferam1+32
+;#define Blocks33 saferam1+33
+;#define Blocks34 saferam1+34
+;#define Blocks35 saferam1+35
+;#define Blocks36 saferam1+36
+;#define Blocks37 saferam1+37
+;#define Blocks38 saferam1+38
+;#define Blocks39 saferam1+39
+;_______________________________________________
+;			Row 4
+;¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+;#define Blocks40 saferam1+40
+;#define Blocks41 saferam1+41
+;#define Blocks42 saferam1+42
+;#define Blocks43 saferam1+43
+;#define Blocks44 saferam1+44
+;#define Blocks45 saferam1+45
+;#define Blocks46 saferam1+46
+;#define Blocks47 saferam1+47
+;#define Blocks48 saferam1+48
+;#define Blocks49 saferam1+49
+;_______________________________________________
+;			Row 5
+;¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+;#define Blocks50 saferam1+50
+;#define Blocks51 saferam1+51
+;#define Blocks52 saferam1+52
+;#define Blocks53 saferam1+53
+;#define Blocks54 saferam1+54
+;#define Blocks55 saferam1+55
+;#define Blocks56 saferam1+56
+;#define Blocks57 saferam1+57
+;#define Blocks58 saferam1+58
+;#define Blocks59 saferam1+59
+;
+;
+;
+;
+;
+;
+;
+;balld:
+; 1=down/left
+; 2=down/right
+; 3=up/left
+; 4=up/right
+;
+;.LIST
+;
+;	.org	$9d93				;Origin (set back two to account for AsmPrgm)
+;	.db	$BB,$6D				;Compiled AsmPrgm token
+;	ret					;So TIOS wont run the program
+;	.db	1				;Identifier as MirageOS program
+;	.db	11111111b,11111111b
+;	.db	11100000b,00001111b
+;	.db	11010000b,00111111b
+;	.db	11110011b,11111111b
+;	.db	00101110b,00111111b
+;	.db	11111111b,11111011b
+;	.db	11001100b,00000011b
+;	.db	11010100b,11000011b
+;	.db	11100001b,10000011b
+;	.db	11111111b,10000111b
+;	.db	11001110b,00001111b
+;	.db	11010001b,00111011b
+;	.db	11110001b,01111111b
+;	.db	11111110b,01111111b
+;	.db	11111111b,11111111b
+;	.db	"I don't know Zorak",0
+;
+;
+;
+;
+;	B_CALL(_clrLCDFull)			;Clear the screen.
+;	SET fullScrnDraw, (IY + apiFlg4)	;allow write to col 95 row 0
+;	SET plotLoc, (IY + plotFlags)		;draws to display ONLY, not to buffer
+;	RES indiconly, (IY+indicflags)		;make sure keys are scanned
+;	
+;	
+;	
+;		_____________________________________________
+;				Level Builder
+;		¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+;	This bad boy reads nums from matrix [A] and sticks Row, col
+;	and integer into it's registers.
+;	
+;	Input:
+;		b - Row
+;		c - Column
+;		d - Matrix name 1=[A], 2=[B], 3=[C] etc
+;	Output:
+;		b - Row
+;		c - Column
+;		d - Value (0-6) (if d>6 d=0)	
+	
+	
+
+;----------------------
+;
+;		Here b is row c is column
+	
+
+	
+	
+	ld a,0 
+	ld (matrixloopx),a
+	ld a,1
+	ld (matrixyval),a
+	
+matrixloopdydoo:
+     	    	
+	call SetupMatrix
+	
+	ld a,(matrixyval)
+	ld b,a
+	ld c,1
+	ld hl,Blocks10
+	push hl
+		push bc
+			call Matrixhand
+		pop bc
+	
+	pop hl
+	
+	
+
+	ld (hl),d
+
+	ld a,0
+	cp d
+	jr z,nicetry
+	;push hl
+	;	call IncExitCounter
+	;pop hl
+nicetry:
+	push hl
+		push bc
+			Call ExBC
+   			call DrawBlock
+  	
+  	
+  
+Matrixlooper1:  
+  
+  			Call ExBC
+  			call SetupMatrix
+		pop bc
+		inc c	;increase x val (C=X)
+	pop hl
+	inc hl
+	push hl
+		push bc
+			call Matrixhand
+		pop bc
+		push bc
+			Call ExBC
+			call DrawBlock
+		pop bc
+	pop hl
+
+	ld (hl),d	;save d to next memory location
+
+	push hl
+		push bc
+		
+			ld hl,matrixloopx
+			inc (hl)
+			ld a,(matrixloopx)
+			ld h,a
+			ld a,9
+			cp h
+			jr nz,Matrixlooper1
+			
+		pop bc
+	pop hl
+	inc hl
+	push hl
+		push bc	
+			ld a,0 
+			ld (matrixloopx),a
+		
+			ld hl,matrixyval
+			inc (hl)
+			ld a,(matrixyval)
+			ld h,a
+			ld a,6
+			cp h
+			jp nz,matrixloopdydoo
+	
+	
+	
+		pop bc	
+	pop hl
+	pop hl
+	pop hl
+;	call fastcopys
+;	bcall(_getkey)
+;
+;	call quittoshell
+	ret
+	
+	
+IncExitCounter:
+	ld hl,Exitcounter
+	inc (hl)
+	ret
+	
+	
+SetupMatrix:
+	ld hl,MatAname		;load into hl values to tell findsym that it's a matrix,
+     				;(MatObj), we need an obj in the matrix (tVarmat),
+     				;and that it's in matrix [A]
+	bcall(_Mov9ToOp1)		;copys 9 bytes ram to op1 (we only need 3 (I think))
+	bcall(_findsym)		;look the matix up
+     	ret			;Now de is pointer to Matrix's spot in mem
+
+Matrixhand:
+	bcall(_GetMtoOp1)		;op1 = intger val of spot in matrix
+	bcall(_convop1)
+	ld a,0
+	cp e
+	jp z,dtozer
+	ld a,1
+	cp e
+	jp z,dtoone
+	ld a,2
+	cp e
+	jp z,dtotwo
+	ld a,3
+	cp e
+	jp z,dtotre
+	ld a,4
+	cp e
+	jp z,dtofor
+	ld a,5
+	cp e
+	jp z,dtofiv
+	ld a,6
+	cp e
+	jp z,dtosix
+	;jp dtozer
+	
+dtozer:
+	ld d,0
+     	ret
+dtoone:
+	ld d,1
+     	ret
+dtotwo:
+	ld d,2
+     	ret
+dtotre:
+	ld d,3
+     	ret
+dtofor:
+	ld d,4
+     	ret
+dtofiv:
+	ld d,5
+     	ret
+dtosix:
+	ld d,6
+     	ret
+
+
+MatAname:
+	.db MatObj,tVarMat,tMatA,0
+
+ExBC:
+	ld a,b
+	ld b,c
+	ld c,a
+	ret
+
+	
+	
+;		____________________________________
+;			Block Drawing Routine
+;		¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+;		
+;	*	Each block is 8 pixels x 4 pixels (5 types)
+;	*	Must be called ( call DrawBlock )
+;
+;	1:		2:		3:		
+;		     		 		  
+;		      				    
+;						
+;		1 hit			1 hit			1 hit
+;
+;	4:		5:		6:		
+;		   		   		    
+;		   		   		    
+;						
+;		1 hit			2 hits			4 hits
+;	
+;		Multiple hit blocks (5&6) inverse when hit. (maybe)
+;	
+;
+;	Inputs:
+;		b:	Xval of block (1-10)	1= far right
+;		c:	Yval of block (1-8)	1= top
+;		d:	Type of block (0-6)	0= no block
+;	Outputs:
+;		Spits out block
+;		____________________________________
+;			Block Drawing Routine
+;		¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+;	To Do:
+;		1) Make code that sets up initial 		99% (need to test)
+;		   coordinates for each block (w/ pixelonhl)
+;		2) Code that draws each block w/ it's 		99% (need to test)
+;		   distinctive design
+;		3) Read block positions from matrix 		01%
+;		4) Colision stuff (Laaaaaater.)			00%
+;		(remember to divide by 8 to get cols 1-10)
+;
+;
+;
+;
+
+Drawblock:
+	
+;		________________________________
+;			Position Shunter
+;		¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+;			________________
+;			    X Values
+;			¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+;	
+	push de
+		dec b
+		ld h,b
+		ld l,9
+		call multhl
+		ld b,l
+		inc b
+		inc b
+		inc b		;Now ready to draw X value
+		ld d,b
+		push de
+
+;			________________
+;			    Y Values
+;			¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+			dec c
+			ld h,c
+			ld l,5
+			call multhl
+			ld c,l
+			inc c
+			inc c
+			inc c
+			inc c
+			inc c
+			inc c
+			inc c
+			inc c		;Now Ready to do Y val
+			ld l,c
+		pop de
+		ld h,d	
+;			READY TO DRAW!!!!!!!
+
+
+
+
+
+;		_______________________________
+;			Block Selection
+;		¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯¯
+	pop de
+	ld a,1
+	cp d
+	jr z,Block1
+	inc a
+	cp d
+	jr z,Block2
+	inc a
+	cp d
+	jr z,Block3
+	inc a
+	cp d
+	jp z,Block4
+	inc a
+	cp d
+	jp z,Block5
+	inc a
+	cp d
+	jp z,Block6
+	jp Block0
+	ret
+Block1:
+
+;	First Row
+;	¯¯¯¯¯¯¯¯¯
+	call TopRow		; 
+				;      
+;	Second row		;       
+;	¯¯¯¯¯¯¯¯¯¯		; 
+	inc l
+	call pixelonhl
+	dec h
+	dec h
+	dec h
+	dec h
+	dec h
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	
+;	Third Row
+;	¯¯¯¯¯¯¯¯¯
+	inc l
+	call pixelonhl
+	inc h
+	inc h
+	inc h
+	inc h
+	inc h
+	inc h
+	inc h
+	call pixelonhl
+
+;	Fourth Row
+;	¯¯¯¯¯¯¯¯¯¯
+	call BotRow
+	ret
+	
+Block2:
+;	First Row
+;	¯¯¯¯¯¯¯¯¯
+	call TopRow		; 
+				;  
+;	Second Row		; 
+;	¯¯¯¯¯¯¯¯¯¯		; 
+	inc l
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	dec h
+	call pixelonhl
+	
+;	Third Row
+;	¯¯¯¯¯¯¯¯¯
+	inc l
+	call pixelonhl
+	inc h	
+	call pixelonhl
+	inc h
+	call pixelonhl
+	inc h
+	call pixelonhl
+	inc h
+	call pixelonhl
+	inc h
+	call pixelonhl
+	inc h	
+	call pixelonhl
+	inc h
+	call pixelonhl
+
+;	Fourth row
+;	¯¯¯¯¯¯¯¯¯¯
+	Call BotRow
+	
+	ret
+	
+Block3:
+;	First Row	
+;	¯¯¯¯¯¯¯¯¯	  
+	call TopRow    ;    
+		       ;
+;	Second Row
+;	¯¯¯¯¯¯¯¯¯¯
+	inc l
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	dec h
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	
+;	Third Row
+;	¯¯¯¯¯¯¯¯¯
+	inc l
+	call pixelonhl
+	inc h
+	inc h
+	inc h
+	call pixelonhl
+	inc h
+	call pixelonhl
+	inc h
+	inc h
+	inc h
+	call pixelonhl
+	
+;	Fourth Row
+;	¯¯¯¯¯¯¯¯¯¯
+	call BotRow
+	ret
+	
+Block4:
+;	
+;	   
+;	   
+;	
+
+
+;	First Row
+;	¯¯¯¯¯¯¯¯¯
+	call TopRow
+	
+;	Second Row
+;	¯¯¯¯¯¯¯¯¯¯
+	inc l
+	call pixelonhl
+	dec h
+	dec h
+	call pixelonhl
+	dec h
+	dec h
+	call pixelonhl
+	dec h
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	
+;	Third Row
+;	¯¯¯¯¯¯¯¯¯
+	inc l
+	call pixelonhl
+	inc h
+	inc h
+	call pixelonhl
+	inc h
+	inc h
+	call pixelonhl
+	inc h
+	inc h
+	call pixelonhl
+	inc h
+	call pixelonhl
+
+;	Fourth Row
+;	¯¯¯¯¯¯¯¯¯¯
+	call BotRow
+	ret
+	
+Block5:
+;		
+;	   
+;	   
+;	
+
+;	First Row
+;	¯¯¯¯¯¯¯¯¯
+	call TopRow
+	
+;	Second Row
+;	¯¯¯¯¯¯¯¯¯¯
+	inc l
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	dec h
+	dec h
+	dec h
+	call pixelonhl
+	
+;	Third Row
+;	¯¯¯¯¯¯¯¯¯
+	inc l
+	call pixelonhl
+	inc h
+	call pixelonhl
+	inc h
+	call pixelonhl
+	inc h
+	call pixelonhl
+	inc h
+	inc h
+	inc h
+	inc h
+	call pixelonhl
+
+;	Fourth Row
+;	¯¯¯¯¯¯¯¯¯¯
+	call BotRow
+	ret
+
+Block6:
+;		
+;	    
+;	    
+;		
+
+;	First Row
+;	¯¯¯¯¯¯¯¯¯
+	call TopRow
+	
+;	Second Row
+;	¯¯¯¯¯¯¯¯¯¯
+	inc l
+	call pixelonhl
+	dec h
+	dec h
+	call pixelonhl
+	dec h
+	dec h
+	dec h
+	call pixelonhl
+	dec h
+	dec h
+	call pixelonhl
+	
+;	Third Row
+;	¯¯¯¯¯¯¯¯¯
+	inc l
+	call pixelonhl
+	inc h
+	inc h
+	call pixelonhl
+	inc h
+	inc h
+	inc h
+	call pixelonhl
+	inc h
+	inc h
+	call pixelonhl
+
+;	Fourth Row
+;	¯¯¯¯¯¯¯¯¯¯
+	call BotRow
+	ret
+	
+Block0:
+	
+	call pixeloffhl		
+	inc h			
+	call pixeloffhl		
+	inc h			
+	call pixeloffhl
+	inc h
+	call pixeloffhl
+	inc h	
+	call pixeloffhl
+	inc h
+	call pixeloffhl
+	inc h
+	call pixeloffhl
+	inc h
+	call pixeloffhl
+	
+	inc l
+	call pixeloffhl		
+	dec h			
+	call pixeloffhl		
+	dec h			
+	call pixeloffhl
+	dec h
+	call pixeloffhl
+	dec h	
+	call pixeloffhl
+	dec h
+	call pixeloffhl
+	dec h
+	call pixeloffhl
+	dec h
+	call pixeloffhl
+
+	inc l
+	call pixeloffhl		
+	inc h			
+	call pixeloffhl		
+	inc h			
+	call pixeloffhl
+	inc h
+	call pixeloffhl
+	inc h	
+	call pixeloffhl
+	inc h
+	call pixeloffhl
+	inc h
+	call pixeloffhl
+	inc h
+	call pixeloffhl
+
+	inc l
+	call pixeloffhl		
+	dec h			
+	call pixeloffhl		
+	dec h			
+	call pixeloffhl
+	dec h
+	call pixeloffhl
+	dec h	
+	call pixeloffhl
+	dec h
+	call pixeloffhl
+	dec h
+	call pixeloffhl
+	dec h
+	call pixeloffhl
+	ret	
+	
+	
+	
+		
+	
+;---------------Drawing space savers
+TopRow:
+	call pixelonhl		
+	inc h			
+	call pixelonhl		
+	inc h			
+	call pixelonhl
+	inc h
+	call pixelonhl
+	inc h	
+	call pixelonhl
+	inc h
+	call pixelonhl
+	inc h
+	call pixelonhl
+	inc h
+	call pixelonhl
+	ret
+BotRow:
+	inc l
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	dec h
+	call pixelonhl
+	ret

@@ -1,0 +1,291 @@
+;====================================================================================
+;
+;					ARKANOID 83+
+;					Ball Routine
+;Started: 	September 20th 2002
+;By:		Patrick Armstrong
+;
+;
+;====================================================================================
+;
+;	Registers used:
+;			a - Bitch register
+;			b - X value for Ipoint (drawing)
+;			c - Y value for Ipoint (drawing)
+;			d - White (0) or black (1) pixel for Ipoint (drawing)
+;			e - Unused
+;			f - Unused
+;			g - Unused
+;			h - Unused
+;			i - Unused
+;
+
+;balld 1=down/left 2=down/right 3=up/left 4=up/right
+
+	
+Loopouter:
+
+	ld a,(balld)
+	cp 1		;check if ball is down/left
+	jr z,lpDwnLft
+	cp 2		;chk d/r
+	jr z,lpDwnRgt
+	cp 3		;UL
+	jr z,lpUpLft
+	cp 4		;UR
+	jr z,lpUpRgt
+	
+lpDwnLft:
+	;-------------move left/d
+	ld a,(ballx)
+	cp 3
+	jp z,chgx
+	ld a,(bally)
+	cp 5
+	jp z,Quitornot ;chgy
+	ld a,(ballx)
+	push af
+	dec a
+	ld (ballx),a
+	ld a,(bally)
+	push af
+	dec a
+	ld (bally),a
+	jp Draw
+	
+lpDwnRgt:
+	;-------------move r/d
+	ld a,(ballx)
+	cp 90
+	jr z,chgx
+	ld a,(bally)
+	cp 5
+	jp z,Quitornot ;chgy
+	ld a,(ballx)
+	push af
+	inc a
+	ld (ballx),a
+	ld a,(bally)
+	push af
+	dec a
+	ld (bally),a
+	jp Draw
+	
+lpUpLft:
+	;-------------move l/u
+	ld a,(ballx)
+	cp 3
+	jr z,chgx
+	ld a,(bally)
+	cp 56
+	jr z,chgy
+	ld a,(ballx)
+	push af
+	dec a
+	ld (ballx),a
+	ld a,(bally)
+	push af
+	inc a
+	ld (bally),a
+	jr Drawcut
+	
+lpUpRgt:
+	;-------------move r/d
+	ld a,(ballx)
+	cp 90
+	jr z,chgx
+	ld a,(bally)
+	cp 56
+	jr z,chgy
+	ld a,(ballx)
+	push af
+	inc a
+	ld (ballx),a
+	ld a,(bally)
+	push af
+	inc a
+	ld (bally),a
+	jr Drawcut
+
+chgy:
+	ld a,(balld)
+	cp 1
+	jr z,dirtotre
+	cp 2
+	jr z,dirtofor
+	cp 3
+	jr z,dirtoone
+	jr dirtotwo
+	
+chgx:
+	ld a,(balld)
+	cp 1
+	jr z,dirtotwo
+	cp 2
+	jr z,dirtoone
+	cp 3
+	jr z,dirtofor
+	jr dirtotre
+	
+dirtoone:
+	ld a,1
+	ld (balld),a
+	ld a,(ballx)
+	push af
+	ld a,(bally)
+	push af
+	jr Drawcut
+	
+dirtotwo:
+	ld a,2
+	ld (balld),a
+	ld a,(ballx)
+	push af
+	ld a,(bally)
+	push af
+	jr Draw
+	
+dirtotre:
+	ld a,3
+	ld (balld),a
+	ld a,(ballx)
+	push af
+	ld a,(bally)
+	push af
+	jr Draw
+	
+dirtofor:
+	ld a,4
+	ld (balld),a
+	ld a,(ballx)
+	push af
+	ld a,(bally)
+	push af
+	jr Draw
+Drawcut: jr Draw 
+Quitornot: 
+	
+	ld a,(paddx)
+	ld e,a
+	ld a,(ballx)
+	dec e
+	dec e
+	cp e
+	jp z,dirtotre ;1
+	inc e
+	cp e
+	jp z,dirtotre ;2
+	inc e
+	cp e
+	jp z,dirtotre ;3
+	inc e
+	cp e
+	jp z,dirtotre ;4
+	inc e
+	cp e
+	jp z,dirtotre ;5
+	inc e
+	cp e
+	jp z,dirtotre ;6
+	inc e
+	cp e
+	jp z,dirtotre ;7
+	inc e
+	cp e
+	jp z,dirtofor ;8
+	inc e
+	cp e
+	jp z,dirtofor ;9
+	inc e
+	cp e
+	jp z,dirtofor ;10
+	inc e
+	cp e
+	jp z,dirtofor ;11
+	inc e
+	cp e
+	jp z,dirtofor ;12
+	inc e
+	cp e
+	jp z,dirtofor ;13
+	inc e
+	cp e
+	jp z,dirtofor ;13
+	jr Leave
+
+Leave:
+	call quittoshell
+	
+Draw:
+	
+	
+	
+	
+	
+	ld d,0
+	pop af
+	ld c,a
+	pop af
+	ld b,a
+	bcall(_IPoint)
+	inc b
+	bcall(_IPoint)
+	dec c
+	inc b
+	bcall(_IPoint)
+	dec b
+	bcall(_IPoint)
+	dec b
+	bcall(_IPoint)
+	dec b
+	bcall(_IPoint)
+	dec c
+	bcall(_IPoint)
+	inc b
+	bcall(_IPoint)
+	inc b
+	bcall(_IPoint)
+	inc b
+	bcall(_IPoint)
+	dec c
+	dec b
+	bcall(_IPoint)
+	dec b
+	bcall(_IPoint)
+	
+	ld d,1
+	ld a,(ballx)
+	ld b,a
+	ld a,(bally)
+	ld c,a
+	bcall(_IPoint)
+	inc b
+	bcall(_IPoint)
+	dec c
+	inc b
+	bcall(_IPoint)
+	dec b
+	bcall(_IPoint)
+	dec b
+	bcall(_IPoint)
+	dec b
+	bcall(_IPoint)
+	dec c
+	bcall(_IPoint)
+	inc b
+	bcall(_IPoint)
+	inc b
+	bcall(_IPoint)
+	inc b
+	bcall(_IPoint)
+	dec c
+	dec b
+	bcall(_IPoint)
+	dec b
+	bcall(_IPoint)
+		
+	
+	
+	
+
+	
